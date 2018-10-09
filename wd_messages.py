@@ -12,6 +12,20 @@ class ItemLootMessage(NewsMessages):
         self.posted = datalist[6]
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
+    def get_news_string(self,wdobject):
+        char = wdobject.get_member_info(self.character_name)
+        gender = char[5]
+        avatar = wdobject.get_avatar(self.character_name)
+        if gender == 0:
+            message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)[2])
+        else:
+            message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)[2])
+        image = wdobject.get_item_image(self.itemId)
+        url = wdobject.get_item_url(self.itemId)
+        answer= {"author":self.character_name,"message":message,"avatar":avatar,"image":image,"url":url}
+        return answer
+    def get_mark_query(self):
+        return 'UPDATE item_loot SET posted = 1 WHERE id = "%d"' % (self.id)
 
 class PlayerAchievementMessage(NewsMessages):
     def __init__(self,datalist):
@@ -26,7 +40,13 @@ class PlayerAchievementMessage(NewsMessages):
         self.posted = datalist[8]
     def __str__(self):
         return '%s заслужил достижение %s'%(self.character_name,self.title)
-
+    def get_news_string(self,wdobject):
+        avatar = wdobject.get_avatar(self.character_name)
+        message = '%s заслужил достижение %s'%(self.character_name,self.title)
+        answer= {"message":message,"avatar":avatar}
+        return answer
+    def get_mark_query(self):
+        return 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 class GuildAchievementMessage(NewsMessages):
     def __init__(self,datalist):
         self.id = datalist[0]
@@ -41,5 +61,11 @@ class GuildAchievementMessage(NewsMessages):
     def __str__(self):
         print(self.character_name,self.title) 
         return 'Гильдия заслужила достижение %s'%(self.title)
-      
+    def get_news_string(self,wdobject):
+        avatar = wdobject.get_avatar(self.character_name)
+        message = 'Гильдия заслужила достижение %s'%(self.title)
+        answer= {"message":message,"avatar":avatar}
+        return answer
+    def get_mark_query(self):
+        return  'UPDATE guild_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 

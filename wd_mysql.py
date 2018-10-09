@@ -51,6 +51,14 @@ class MySqlOperations():
             character['gender'],character['level'],character['achievementPoints'],character['thumbnail'],rank,0,1)
         print(sql)
         self.update_query(sql)
+    def get_member_avatar(self,character):
+        sql = 'SELECT thumbnail FROM guild_members WHERE name = "%s"'%(character)
+        return self.execute_query(sql)[0] 
+
+    def get_member_info(self,character):
+        sql = 'SELECT * FROM guild_members WHERE name = "%s"'%character
+        return self.execute_query(sql)
+
     def insert_item_loot(self,type,character,timestamp,itemId,context,**other):
         sql = 'INSERT INTO item_loot(type,character_name,timestamp,itemId,context,posted) VALUES ("%s","%s","%d","%d","%s","%d")'%(type,character,timestamp,itemId,context,0)
         self.update_query(sql)
@@ -84,6 +92,9 @@ class MySqlOperations():
 #        format_strings = ','.join(['%s'] * len(list_ids))
 #        sql = "UPDATE news SET posted = 1 WHERE news_id IN (%s)" % (format_strings, tuple(list_ids))
 #        self.update_query(sql)
+    def mark_posted(self,news):
+        sql = news.get_mark_query()
+        self.update_query(sql)
 
     def mark_posted_item_loot(self,id):
         sql = 'UPDATE item_loot SET posted = 1 WHERE id = "%d"' % (id)
