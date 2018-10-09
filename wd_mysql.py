@@ -1,4 +1,6 @@
 from wd_config import Config
+from wd_messages import NewsMessages,ItemLootMessage,GuildAchievementMessage,PlayerAchievementMessage
+
 import MySQLdb
 import sys
 
@@ -22,6 +24,18 @@ class MySqlOperations():
         except:
             print(sys.exc_info())
             self.connect.rollback()
+    def execute_query(self,text):
+        cur = self.connect.cursor()
+        row_count = cur.execute(text)
+        if row_count == 0:
+            return None
+        else:
+            return cur.fetchone()
+    def execute_query_all(self,text):
+        cur = self.connect.cursor()
+        cur.execute(text)
+        return cur.fetchall()
+
     def clear_table(self,table_name):
         sql = 'TRUNCATE TABLE %s'%(table_name)
         self.update_query(sql)
@@ -53,8 +67,46 @@ class MySqlOperations():
            achievement['description'],achievement['icon'],0)
         self.update_query(sql)
 
-    def mark_as_posted(self,list_ids):
-        format_strings = ','.join(['%s'] * len(list_ids))
-        sql = "UPDATE news SET posted = 1 WHERE news_id IN (%s)" % (format_strings, tuple(list_ids))
+    def insert_item_info(self,id,disenchantingSkillRank,description,name,icon,itemLevel,**other):
+        sql = 'INSERT INTO items2(id,description,name,icon,itemLevel) VALUES ("%d","%s","%s","%s","%d")'%\
+        (id,description,name,icon,itemLevel)
         self.update_query(sql)
-    
+
+    def get_item_info(self,item_id):
+        sql = "SELECT * FROM items2 WHERE id = '%d'"%(item_id)
+        return self.execute_query(sql)
+
+    def get_maximum_timestamp(self):
+        sql = 'SELECT MAX(timestamp) AS timestamp FROM   (SELECT MAX(timestamp) AS timestamp FROM item_loot UNION SELECT MAX(timestamp) FROM guild_achievement UNION SELECT MAX(timestamp) FROM player_achievement) AS t'
+        return self.execute_query(sql)[0] 
+
+#    def mark_as_posted(self,list_ids):
+#        format_strings = ','.join(['%s'] * len(list_ids))
+#        sql = "UPDATE news SET posted = 1 WHERE news_id IN (%s)" % (format_strings, tuple(list_ids))
+#        self.update_query(sql)
+
+    def mark_posted_item_loot(self,id):
+        sql = 'UPDATE item_loot SET posted = 1 WHERE id = "%d"' % (id)
+        self.update_query(sql)
+    def mark_posted_guild_achievement(self,id):
+        sql = 'UPDATE guild_achievement SET posted = 1 WHERE id = "%d"' % (id)
+        self.update_query(sql)
+    def mark_posted_player_achievement(self,id):
+        sql = 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (id)
+        self.update_query(sql)
+    def get_unposted_news(self):
+        sql = "SELECT * FROM item_loot WHERE posted = '0'"
+        rows = self.execute_query_all(sql)
+        newslist = []
+        for row in rows:
+            newslist.append(ItemLootMessage(row))
+        sql = "SELECT * FROM player_achievement WHERE posted = '0'"
+        rows = self.execute_query_all(sql)
+        for row in rows:
+            newslist.append(PlayerAchievementMessage(row))
+        sql = "SELECT * FROM guild_achievement WHERE posted = '0'"
+        rows = self.execute_query_all(sql)
+        for row in rows:
+            newslist.append(GuildAchievementMessage(row))
+        return newslist
+
