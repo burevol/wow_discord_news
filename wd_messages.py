@@ -68,4 +68,38 @@ class GuildAchievementMessage(NewsMessages):
         return answer
     def get_mark_query(self):
         return  'UPDATE guild_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
+class GuildInviteMessage(NewsMessages):
+    def __init__(self,datalist):
+        self.id = datalist[0]
+        self.character_name = datalist[1]
+        self.gender = datalist[5]
+        self.isMember = datalist[11]
+    def __str__(self):
+        if self.isMember == 1:
+            if self.gender == 0:
+                return "%s присоединился к гильдии"%(self.character_name)
+            else:
+                return '%s присоединилась к гильдии'%(self.character_name)
+        else:
+            if self.gender == 0:
+                return "%s покинул гильдию"%(self.character_name)
+            else:
+                return '%s покинула гильдию'%(self.character_name)
+    def get_news_string(self,wdobject):
+        avatar = wdobject.get_avatar(self.character_name)
+        if self.isMember == 1:
+            if self.gender == 0:
+                message = "%s присоединился к гильдии"%(self.character_name)
+            else:
+                message =  '%s присоединилась к гильдии'%(self.character_name)
+        else:
+            if self.gender == 0:
+                message =  "%s покинул гильдию"%(self.character_name)
+            else:
+                message =  '%s покинула гильдию'%(self.character_name)
+        answer = {'message':message,'avatar':avatar}
+        return answer
+    def get_mark_query(self):
+        return 'UPDATE guild_members  SET posted = 1 WHERE id = "%d"' % (self.id)
+
 
