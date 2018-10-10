@@ -1,19 +1,23 @@
+import traceback
 import requests
 from webhook import DiscordWebhook, DiscordEmbed
 from wd_config import Config
 from wd_mysql import MySqlOperations
 
 class WowDiscord():
-    def __init__(self):
-        self.cf = Config()
+    def __init__(self,configfile = None):
+        if configfile != None:
+            self.cf = Config(configfile)
+        else:
+            self.cf = Config()
         self.mysql = None
-
     def get_data_json(self,path):
         try:
             request = requests.get(path)
             request.raise_for_status()
             request_json = request.json()
         except requests.exceptions.RequestException as error:
+            print('Ошибка получения данных json') 
             request_json = []
         return request_json
 
@@ -57,8 +61,11 @@ class WowDiscord():
             return descr
     def get_avatar(self,character):
         field = self.mysql.get_member_avatar(character)
-        path = 'https://render-eu.worldofwarcraft.com/character/'+field
-        return path
+        print(character,field)
+        if field == None:
+             return None
+        else:
+             return  'https://render-eu.worldofwarcraft.com/character/'+field
 
     def get_member_info(self, character):
         return self.mysql.get_member_info(character)
@@ -107,11 +114,21 @@ class WowDiscord():
         #data = {"content":message,"embeds":[{"image":{"url": image }}]}
         #print( data)
     #requests.post(discord_webhook_url, data = data)
+    def update_guild_members(self):
+        self.mysql.reset_guild_flag()
+        for member in self.get_guild_members():
+            self.mysql.insert_member_info(**member)
+        self.mysql.check_guild_members()
 
     def read_news(self):
         with MySqlOperations(self.cf) as mysql:
             self.mysql = mysql
+ #           self.mysql.clear_table('guild_members')
+            self.update_guild_members()
+
             max_timestamp = mysql.get_maximum_timestamp()
+            if max_timestamp == None:
+                max_timestamp = 0;
             for news in self.get_guild_news():
                 if news['timestamp'] > max_timestamp:
                     if news['type'] == 'itemLoot':
@@ -124,10 +141,10 @@ class WowDiscord():
                         pass #Добавить код логирования неопознанных строк
             for news in mysql.get_unposted_news():
                 try:
-                    print(news)
-                    #self.post_message(**news.get_news_string(self))
+                   #print(news.get_news_string(self))
+                    self.post_message(**news.get_news_string(self))
                 except:
-                    print('Ошибка отправки сообщения в Discord')
+                    print('Ошибка отправки сообщения в Discord',traceback.format_exc())
                 else:
                     mysql.mark_posted(news)
 

@@ -1,3 +1,5 @@
+import traceback
+
 class NewsMessages():
     pass
 
@@ -14,7 +16,13 @@ class ItemLootMessage(NewsMessages):
         return '%s получил %d'%(self.character_name,self.itemId)
     def get_news_string(self,wdobject):
         char = wdobject.get_member_info(self.character_name)
-        gender = char[5]
+        if char == None:
+            gender = 0
+        else:
+            try:
+                gender = char[5]
+            except:
+                print(self.character_name,char,traceback.format_exc())
         avatar = wdobject.get_avatar(self.character_name)
         if gender == 0:
             message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)[2])
@@ -43,7 +51,7 @@ class PlayerAchievementMessage(NewsMessages):
     def get_news_string(self,wdobject):
         avatar = wdobject.get_avatar(self.character_name)
         message = '%s заслужил достижение %s'%(self.character_name,self.title)
-        answer= {"message":message,"avatar":avatar}
+        answer= {"message":message,"avatar":avatar,'image':avatar}
         return answer
     def get_mark_query(self):
         return 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
@@ -97,9 +105,9 @@ class GuildInviteMessage(NewsMessages):
                 message =  "%s покинул гильдию"%(self.character_name)
             else:
                 message =  '%s покинула гильдию'%(self.character_name)
-        answer = {'message':message,'avatar':avatar}
+        answer = {'message':message,'avatar':avatar,'image':avatar}
         return answer
     def get_mark_query(self):
-        return 'UPDATE guild_members  SET posted = 1 WHERE id = "%d"' % (self.id)
+        return 'UPDATE guild_members  SET posted = 1 WHERE member_id = "%d"' % (self.id)
 
 
