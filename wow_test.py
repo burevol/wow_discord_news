@@ -1,6 +1,7 @@
 from wd_wowdiscord import WowDiscord
 from wd_mysql import MySqlOperations
-from wd_mysqlobjects import MysqlObjects,Races
+from wd_mysqlobjects import MysqlObjects
+from wd_mysqlobjects_races import Races
 
 if __name__ == '__main__':
     wd = WowDiscord()
