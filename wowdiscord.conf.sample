@@ -1,0 +1,10 @@
+[Config]
+DBHOST =  <MySQL DB host>
+DBUSER = <MySQL user>
+DBPASSWD =  <MySQL password>
+DB =  <MySQL DB name>
+GUILD_NAME = <WoW guild name>
+GUILD_REALM = <WoW realm name e.g. galakrond>
+DISCORD_WEBHOOK =  <Discord webhook link>
+WOW_API_KEY = <WoW API key>
+LOCAL = <Locale for WoW API e.g. ru_RU or en_EN>
