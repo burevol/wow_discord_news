@@ -7,6 +7,7 @@ from wd_mysql import MySqlOperations
 from wd_mysqlobjects_items import Items
 from wd_mysqlobjects_members import Members
 from wd_mysqlobjects_races import Races
+from wd_mysqlobjects_classes import Classes
 
 class WowDiscord():
     def __init__(self,configfile = None):
