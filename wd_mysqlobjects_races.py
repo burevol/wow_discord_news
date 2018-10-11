@@ -16,14 +16,14 @@ class Races(MysqlObjects):
             sql = "SELECT * FROM races WHERE race_id = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return get_dict_from_result(result)
+                return self.get_dict_from_result(result)
             else:
                 raise IndexError
         elif type(id) is str:
             sql = "SELECT * FROM races WHERE name = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return get_dict_from_result(result)
+                return self.get_dict_from_result(result)
             else:
                 raise KeyError
         else:

@@ -16,14 +16,14 @@ class Classes(MysqlObjects):
             sql = "SELECT * FROM classes WHERE class_id = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return get_dict_from_result(result)
+                return self.get_dict_from_result(result)
             else:
                 raise IndexError
         elif type(id) is str:
             sql = "SELECT * FROM classes WHERE name = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return get_dict_from_result(result)
+                return self.get_dict_from_result(result)
             else:
                 raise KeyError
         else:
