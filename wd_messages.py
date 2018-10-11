@@ -15,15 +15,13 @@ class ItemLootMessage(NewsMessages):
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
     def get_news_string(self,wdobject):
-        char = wdobject.get_member_info(self.character_name)
-        if char == None:
+        try:
+            gender = wdobject.get_member_info(self.character_name)['gender']
+            avatar = wdobject.get_avatar(self.character_name)
+        except KeyError:
             gender = 0
-        else:
-            try:
-                gender = char[5]
-            except:
-                print(self.character_name,char,traceback.format_exc())
-        avatar = wdobject.get_avatar(self.character_name)
+            avatar = None
+
         if gender == 0:
             message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
         else:
@@ -49,12 +47,16 @@ class PlayerAchievementMessage(NewsMessages):
     def __str__(self):
         return '%s заслужил достижение %s'%(self.character_name,self.title)
     def get_news_string(self,wdobject):
-        avatar = wdobject.get_avatar(self.character_name)
+        try:
+            avatar = wdobject.get_avatar(self.character_name)
+        except KeyError:
+            avatar = None
         message = '%s заслужил достижение %s'%(self.character_name,self.title)
         answer= {"message":message,"avatar":avatar,'image':avatar}
         return answer
     def get_mark_query(self):
         return 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
+
 class GuildAchievementMessage(NewsMessages):
     def __init__(self,datalist):
         self.id = datalist[0]
@@ -70,7 +72,10 @@ class GuildAchievementMessage(NewsMessages):
         print(self.character_name,self.title) 
         return 'Гильдия заслужила достижение %s'%(self.title)
     def get_news_string(self,wdobject):
-        avatar = wdobject.get_avatar(self.character_name)
+        try:
+             avatar = wdobject.get_avatar(self.character_name)
+        except KeyError:
+             avatar = None 
         message = 'Гильдия заслужила достижение %s'%(self.title)
         answer= {"message":message,"avatar":avatar}
         return answer
@@ -94,7 +99,10 @@ class GuildInviteMessage(NewsMessages):
             else:
                 return '%s покинула гильдию'%(self.character_name)
     def get_news_string(self,wdobject):
-        avatar = wdobject.get_avatar(self.character_name)
+        try:
+            avatar = wdobject.get_avatar(self.character_name)
+        except KeyError:
+            avatar = None
         if self.isMember == 1:
             if self.gender == 0:
                 message = "%s присоединился к гильдии"%(self.character_name)
