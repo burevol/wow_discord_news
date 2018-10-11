@@ -1,18 +1,13 @@
 from wd_mysql import MySqlOperations
 from wd_mysqlobjects import MysqlObjects
 
-class MysqlObjects():
-    def __init__(self,mysql):
-        self.mysql = mysql
-    def clear_table(self,table_name):
-        sql = 'TRUNCATE TABLE %s'%(table_name)
-        self.mysql.update_query(sql,())
-
 class Races(MysqlObjects):
      def __init(self,mysql):
         super().__init__(mysql)
      def clear_table(self):
         super().clear_table('races')
+     def get_dict_from_result(self,result):
+        return {'id':result[0],'mask':result[1],'side':result[2],'name':result[3]}
      def __len__(self):
         sql = 'SELECT COUNT(*) FROM races'
         return self.mysql.execute_query(sql,())[0]
@@ -21,14 +16,14 @@ class Races(MysqlObjects):
             sql = "SELECT * FROM races WHERE race_id = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return {'id':result[0],'mask':result[1],'side':result[2],'name':result[3]}
+                return get_dict_from_result(result)
             else:
                 raise IndexError
         elif type(id) is str:
             sql = "SELECT * FROM races WHERE name = %s"
             result = self.mysql.execute_query(sql,(id,))
             if result:
-                return {'id':result[0],'mask':result[1],'side':result[2],'name':result[3]}
+                return get_dict_from_result(result)
             else:
                 raise KeyError
         else:
