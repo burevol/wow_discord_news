@@ -25,9 +25,9 @@ class ItemLootMessage(NewsMessages):
                 print(self.character_name,char,traceback.format_exc())
         avatar = wdobject.get_avatar(self.character_name)
         if gender == 0:
-            message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)[2])
+            message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
         else:
-            message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)[2])
+            message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
         image = wdobject.get_item_image(self.itemId)
         url = wdobject.get_item_url(self.itemId)
         answer= {"author":self.character_name,"message":message,"avatar":avatar,"image":image,"url":url}

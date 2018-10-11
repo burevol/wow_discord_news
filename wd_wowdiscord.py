@@ -4,6 +4,9 @@ from webhook import DiscordWebhook, DiscordEmbed
 from wd_config import Config
 from wd_mysql import MySqlOperations
 
+from wd_mysqlobjects_items import Items
+
+
 class WowDiscord():
     def __init__(self,configfile = None):
         if configfile != None:
@@ -51,14 +54,16 @@ class WowDiscord():
             yield w_class
 
     def get_item_description(self,item_id):
-        descr = self.mysql.get_item_info(item_id)
-        if descr == None:
+        items = Items(self.mysql)
+        try:
+           item = items[item_id]
+        except IndexError:
             path = 'https://eu.api.battle.net/wow/item/%d?locale=%s&apikey=%s'%(item_id,self.cf.local,self.cf.wow_api_key)
             request_json = self.get_data_json(path)
-            self.mysql.insert_item_info(**request_json)
-            return self.get_item_description(item_id)
+            items[item_id] = request_json
+            return items[item_id]
         else:
-            return descr
+            return item
     def get_avatar(self,character):
         field = self.mysql.get_member_avatar(character)
         print(character,field)
@@ -71,7 +76,7 @@ class WowDiscord():
         return self.mysql.get_member_info(character)
 
     def get_item_image(self,item_id):
-        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.get_item_description(item_id)[3])
+        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.get_item_description(item_id)['id'])
 
     def get_item_url(self,item_id):
        return "http://eu.battle.net/wow/ru/item/"+str(item_id)
