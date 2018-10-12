@@ -59,17 +59,17 @@ class WowDiscord():
         for w_class in request_json['classes']:
             yield w_class
 
-   # def get_item_description(self,item_id):
-   #     items = Items(self.mysql)
-   #     try:
-   #        item = items[item_id]
-   #     except IndexError:
-   #         path = 'https://eu.api.battle.net/wow/item/%d?locale=%s&apikey=%s'%(item_id,self.cf.local,self.cf.wow_api_key)
-   #         request_json = self.get_data_json(path)
-   #         items[item_id] = request_json
-   #         return items[item_id]
-   #     else:
-   #        return item
+    def get_item_description(self,item_id):
+        items = Items(self.mysql)
+        try:
+           item = items[item_id]
+        except IndexError:
+            path = 'https://eu.api.battle.net/wow/item/%d?locale=%s&apikey=%s'%(item_id,self.cf.local,self.cf.wow_api_key)
+            request_json = self.get_data_json(path)
+            items[item_id] = request_json
+            return items[item_id]
+        else:
+           return item
 
     def get_avatar(self,character):
         '''Возвращает ссылку на аватар персонажа'''
@@ -115,6 +115,8 @@ class WowDiscord():
                         news_types[news['type']](**news)
                     except KeyError:
                         pass #Добавить код логирования неопознанных строк
+                    if news['type'] == 'itemLoot':
+                        item = self.get_item_description(news['itemId'])
 
                     #if news['type'] == 'itemLoot':
                     #    mysql.insert_item_loot(**news)

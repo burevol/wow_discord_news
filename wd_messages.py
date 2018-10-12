@@ -46,6 +46,7 @@ class ItemLootMessage(NewsMessages):
         self.gender = datalist[12]
         self.avatar = datalist[15]
         self.item_name = datalist[22]
+
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
     def post_message(self):
