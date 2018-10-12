@@ -40,41 +40,41 @@ class MySqlOperations():
         cur.execute(text)
         return cur.fetchall()
 
-    def clear_table(self,table_name):
-        sql = 'TRUNCATE TABLE %s'
-        self.update_query(sql,(table_name,))
-    def insert_race_info(self,id,mask,side,name):
-        sql = 'INSERT INTO races(race_id,mask,side,name) VALUES (%d,%d,%s,%s)'
-        self.update_query(sql,(id,mask,side,name))
-    def insert_class_info(self,id,mask,powerType,name):
-        sql = 'INSERT INTO classes(class_id,mask,powerType,name) VALUES (%d,%d,%s,%s)'
-        self.update_query(sql,(id,mask,powerType,name))
-    def insert_member_info(self,character,rank):
-        sql = 'SELECT * FROM guild_members WHERE (name = %s) AND (realm = %s)'
-        seek = self.execute_query(sql,(character['name'],character['realm']))
-        if seek == None:
-            sql = 'INSERT INTO guild_members(name,realm,class,race,gender,level,achievementPoints,thumbnail,rank,posted,isMember,is_check)\
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
-            self.update_query(sql,(character['name'],character['realm'],character['class'],\
-                character['race'],character['gender'],character['level'],character['achievementPoints'],character['thumbnail'],\
-                rank,0,1,1) )
-        else:
-            sql = 'UPDATE guild_members SET isMember = "1" WHERE member_id = %s'
-            self.update_query(sql, (seek[0],)) 
-            sql = 'UPDATE guild_members SET is_check = "1" WHERE member_id = %s'
-            self.update_query(sql, (seek[0],))
+##    def clear_table(self,table_name):
+##        sql = 'TRUNCATE TABLE %s'
+##        self.update_query(sql,(table_name,))
+##    def insert_race_info(self,id,mask,side,name):
+##        sql = 'INSERT INTO races(race_id,mask,side,name) VALUES (%d,%d,%s,%s)'
+##        self.update_query(sql,(id,mask,side,name))
+##    def insert_class_info(self,id,mask,powerType,name):
+##        sql = 'INSERT INTO classes(class_id,mask,powerType,name) VALUES (%d,%d,%s,%s)'
+##        self.update_query(sql,(id,mask,powerType,name))
+##    def insert_member_info(self,character,rank):
+##        sql = 'SELECT * FROM guild_members WHERE (name = %s) AND (realm = %s)'
+##        seek = self.execute_query(sql,(character['name'],character['realm']))
+##        if seek == None:
+##            sql = 'INSERT INTO guild_members(name,realm,class,race,gender,level,achievementPoints,thumbnail,rank,posted,isMember,is_check)\
+##                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+##            self.update_query(sql,(character['name'],character['realm'],character['class'],\
+##                character['race'],character['gender'],character['level'],character['achievementPoints'],character['thumbnail'],\
+##                rank,0,1,1) )
+##        else:
+##            sql = 'UPDATE guild_members SET isMember = "1" WHERE member_id = %s'
+##            self.update_query(sql, (seek[0],)) 
+##            sql = 'UPDATE guild_members SET is_check = "1" WHERE member_id = %s'
+##            self.update_query(sql, (seek[0],))
 
-    def get_member_avatar(self,character):
-        sql = 'SELECT thumbnail FROM guild_members WHERE name = %s'
-        avatar =  self.execute_query(sql,(character,))
-        if avatar == None:
-            return None
-        else:
-            return avatar[0] 
-
-    def get_member_info(self,character):
-        sql = 'SELECT * FROM guild_members WHERE name = %s'
-        return self.execute_query(sql,(character,))
+##    def get_member_avatar(self,character):
+##        sql = 'SELECT thumbnail FROM guild_members WHERE name = %s'
+##        avatar =  self.execute_query(sql,(character,))
+##        if avatar == None:
+##            return None
+##        else:
+##            return avatar[0] 
+##
+##    def get_member_info(self,character):
+##        sql = 'SELECT * FROM guild_members WHERE name = %s'
+##        return self.execute_query(sql,(character,))
 
     def insert_item_loot(self,type,character,timestamp,itemId,context,**other):
         sql = 'INSERT INTO item_loot(type,character_name,timestamp,itemId,context,posted) VALUES (%s,%s,%s,%s,%s,%s)'
@@ -92,14 +92,14 @@ class MySqlOperations():
         self.update_query(sql, (character,timestamp,context,achievement['id'],achievement['title'],
            achievement['description'],achievement['icon'],0))
 
-    def insert_item_info(self,id,description,name,icon,itemLevel,**other):
-        sql = 'INSERT INTO items2(id,description,name,icon,itemLevel) VALUES (%s,%s,%s,%s,%s)'
-        self.update_query(sql, (id,description,name,icon,itemLevel))
-
-    def get_item_info(self,item_id):
-        sql = "SELECT * FROM items2 WHERE id = %s"
-        result = self.execute_query(sql,(item_id,))
-        return result
+##    def insert_item_info(self,id,description,name,icon,itemLevel,**other):
+##        sql = 'INSERT INTO items2(id,description,name,icon,itemLevel) VALUES (%s,%s,%s,%s,%s)'
+##        self.update_query(sql, (id,description,name,icon,itemLevel))
+##
+##    def get_item_info(self,item_id):
+##        sql = "SELECT * FROM items2 WHERE id = %s"
+##        result = self.execute_query(sql,(item_id,))
+##        return result
 
     def get_maximum_timestamp(self):
         sql = 'SELECT MAX(timestamp) AS timestamp FROM   (SELECT MAX(timestamp) AS timestamp FROM item_loot UNION SELECT \
