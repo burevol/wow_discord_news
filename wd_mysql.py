@@ -124,16 +124,16 @@ class MySqlOperations():
     #    sql = 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (id)
     #    self.update_query(sql)
     def get_unposted_news(self):
-        sql = "SELECT * FROM item_loot WHERE posted = '0'"
+        sql = "SELECT * FROM item_loot LEFT JOIN guild_members ON item_loot.character_name = guild_members.name LEFT JOIN items2 ON item_loot.itemId = items2. id WHERE posted = '0'"
         rows = self.execute_query_all(sql)
         newslist = []
         for row in rows:
             newslist.append(ItemLootMessage(row))
-        sql = "SELECT * FROM player_achievement WHERE posted = '0'"
+        sql = "SELECT * FROM player_achievement LEFT JOIN guild_members ON player_achievement.character_name = guild_members.name WHERE posted = '0'"
         rows = self.execute_query_all(sql)
         for row in rows:
             newslist.append(PlayerAchievementMessage(row))
-        sql = "SELECT * FROM guild_achievement WHERE posted = '0'"
+        sql = "SELECT * FROM guild_achievement LEFT JOIN guild_members ON guild_achievement.character_name = guild_members.name WHERE posted = '0'"
         rows = self.execute_query_all(sql)
         for row in rows:
             newslist.append(GuildAchievementMessage(row))

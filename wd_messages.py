@@ -27,6 +27,7 @@ class NewsMessages():
 
 class ItemLootMessage(NewsMessages):
     def __init__(self, datalist):
+        print(datalist)
         self.id = datalist[0]
         self.type = datalist[1]
         self.character_name = datalist[2]
