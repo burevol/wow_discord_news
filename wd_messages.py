@@ -1,17 +1,24 @@
-import traceback
+import traceback 
 from webhook import DiscordWebhook, DiscordEmbed
+from wd_config import Config
 
 class NewsMessages():
+    def __init__(self, cf):
+        self.cf = cf
     def get_item_image(self,item_id):
         '''Возвращает URL изображения предмета'''
-        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.items[item_id]['id'])
+        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(item_id)
+    def get_avatar_url(self,avatar):
+        return  'https://render-eu.worldofwarcraft.com/character/'+avatar
 
     def get_item_url(self,item_id):
         '''Возвращает URL описания предмета'''
-        return "http://eu.battle.net/wow/ru/item/"+str(item_id) 
+        return "http://eu.battle.net/wow/ru/item/"+str(item_id)
 
     def post_message(self, message, avatar = None, author = None, image = None, url = None):
         '''Отправляет сообщение в Discord'''
+        print("message: %s, avatar: %s, author: %s, image: %s, url: %s"%(message,avatar,author,image,url))
+        print(self.cf.discord_webhook)
         webhook = DiscordWebhook(self.cf.discord_webhook)
         embed = DiscordEmbed()
         embed.title = message
@@ -26,8 +33,9 @@ class NewsMessages():
         webhook.execute() 
 
 class ItemLootMessage(NewsMessages):
-    def __init__(self, datalist):
-        print(datalist)
+    def __init__(self, cf, datalist):
+        super().__init__(cf)
+#        print(datalist)
         self.id = datalist[0]
         self.type = datalist[1]
         self.character_name = datalist[2]
@@ -35,29 +43,28 @@ class ItemLootMessage(NewsMessages):
         self.itemId = datalist[4]
         self.context = datalist[5]
         self.posted = datalist[6]
+        self.gender = datalist[12]
+        self.avatar = datalist[15]
+        self.item_name = datalist[22]
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
     def post_message(self):
-        try:
-            gender = wdobject.get_member_info(self.character_name)['gender']
-            avatar = wdobject.get_avatar(self.character_name)
-        except KeyError:
-            gender = 0
-            avatar = None
-
-        if gender == 0:
-            message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
+        if not self.gender:
+            message = '%s получил %s'%(self.character_name,self.item_name)
         else:
-            message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
+            message = '%s получила %s'%(self.character_name,self.item_name)
         image = self.get_item_image(self.itemId)
         url = self.get_item_url(self.itemId)
-        answer= {"author":self.character_name,"message":message,"avatar":avatar,"image":image,"url":url}
+        avatar_url = self.get_avatar_url(self.avatar)
+        answer= {"author":self.character_name,"message":message,"avatar":avatar_url,"image":image,"url":url}
         super().post_message(**answer)
     def get_mark_query(self):
         return 'UPDATE item_loot SET posted = 1 WHERE id = "%d"' % (self.id)
 
 class PlayerAchievementMessage(NewsMessages):
-    def __init__(self,datalist):
+    def __init__(self,cf,datalist):
+ #       print(datalist)
+        super().__init__(cf)
         self.id = datalist[0]
         self.character_name = datalist[1]
         self.timestamp = datalist[2]
@@ -67,21 +74,21 @@ class PlayerAchievementMessage(NewsMessages):
         self.description = datalist[6]
         self.icon = datalist[7]
         self.posted = datalist[8]
+        self.avatar = datalist[17]
     def __str__(self):
         return '%s заслужил достижение %s'%(self.character_name,self.title)
     def post_message(self):
-        try:
-            avatar = wdobject.get_avatar(self.character_name)
-        except KeyError:
-            avatar = None
         message = '%s заслужил достижение %s'%(self.character_name,self.title)
-        answer= {"message":message,"avatar":avatar,'image':avatar}
+        avatar_url = self.get_avatar_url(self.avatar)
+        answer= {"message":message,"avatar":avatar_url,'image':avatar_url}
         super().post_message(**answer)
     def get_mark_query(self):
         return 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 
 class GuildAchievementMessage(NewsMessages):
-    def __init__(self,datalist):
+    def __init__(self,cf,datalist):
+        print(datalist)
+        super().__init__(cf)
         self.id = datalist[0]
         self.character_name = datalist[1]
         self.timestamp = datalist[2]
@@ -91,25 +98,25 @@ class GuildAchievementMessage(NewsMessages):
         self.description = datalist[6]
         self.icon = datalist[7]
         self.posted = datalist[8]
+        self.avatar = datalist[17] 
     def __str__(self):
         print(self.character_name,self.title) 
         return 'Гильдия заслужила достижение %s'%(self.title)
     def post_message(self):
-        try:
-             avatar = wdobject.get_avatar(self.character_name)
-        except KeyError:
-             avatar = None 
+        avatar_url = self.get_avatar_url(self.avatar)
         message = 'Гильдия заслужила достижение %s'%(self.title)
-        answer= {"message":message,"avatar":avatar}
+        answer= {"message":message,"avatar":avatar_url}
         super().post_message(**answer)
     def get_mark_query(self):
         return  'UPDATE guild_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 class GuildInviteMessage(NewsMessages):
-    def __init__(self,datalist):
+    def __init__(self,cf,datalist):
+        super().__init__(cf)
         self.id = datalist[0]
         self.character_name = datalist[1]
         self.gender = datalist[5]
         self.isMember = datalist[11]
+        self.avatar = datalist[8]
     def __str__(self):
         if self.isMember == 1:
             if self.gender == 0:
@@ -121,11 +128,7 @@ class GuildInviteMessage(NewsMessages):
                 return "%s покинул гильдию"%(self.character_name)
             else:
                 return '%s покинула гильдию'%(self.character_name)
-    def get_news_string(self,wdobject):
-        try:
-            avatar = wdobject.get_avatar(self.character_name)
-        except KeyError:
-            avatar = None
+    def post_message(self):
         if self.isMember == 1:
             if self.gender == 0:
                 message = "%s присоединился к гильдии"%(self.character_name)
@@ -136,8 +139,9 @@ class GuildInviteMessage(NewsMessages):
                 message =  "%s покинул гильдию"%(self.character_name)
             else:
                 message =  '%s покинула гильдию'%(self.character_name)
-        answer = {'message':message,'avatar':avatar,'image':avatar}
-        return answer
+        avatar_url = self.get_avatar_url(self.avatar)
+        answer = {'message':message,'avatar':avatar_url,'image':avatar_url}
+        super().post_message(**answer)
     def get_mark_query(self):
         return 'UPDATE guild_members  SET posted = 1 WHERE member_id = "%d"' % (self.id)
 
