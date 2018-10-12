@@ -1,4 +1,5 @@
 import traceback
+from webhook import DiscordWebhook, DiscordEmbed
 
 class NewsMessages():
     def get_item_image(self,item_id):
@@ -8,6 +9,21 @@ class NewsMessages():
     def get_item_url(self,item_id):
         '''Возвращает URL описания предмета'''
         return "http://eu.battle.net/wow/ru/item/"+str(item_id) 
+
+    def post_message(self, message, avatar = None, author = None, image = None, url = None):
+        '''Отправляет сообщение в Discord'''
+        webhook = DiscordWebhook(self.cf.discord_webhook)
+        embed = DiscordEmbed()
+        embed.title = message
+        embed.set_image(url = image)
+        embed.set_url(url)
+        embed.color = 242424
+        embed.set_author(name=author, url=None, icon_url=avatar)
+        embed.set_footer(text='Отправлено:')
+        embed.set_timestamp()
+        webhook.add_embed(embed)
+
+        webhook.execute() 
 
 class ItemLootMessage(NewsMessages):
     def __init__(self, datalist):
@@ -20,8 +36,8 @@ class ItemLootMessage(NewsMessages):
         self.posted = datalist[6]
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
-    def get_news_string(self,wdobject):
-        try:Ы
+    def post_message(self):
+        try:
             gender = wdobject.get_member_info(self.character_name)['gender']
             avatar = wdobject.get_avatar(self.character_name)
         except KeyError:
@@ -32,10 +48,10 @@ class ItemLootMessage(NewsMessages):
             message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
         else:
             message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
-        image = get_item_image(self.itemId)
-        url = get_item_url(self.itemId)
+        image = self.get_item_image(self.itemId)
+        url = self.get_item_url(self.itemId)
         answer= {"author":self.character_name,"message":message,"avatar":avatar,"image":image,"url":url}
-        return answer
+        super().post_message(**answer)
     def get_mark_query(self):
         return 'UPDATE item_loot SET posted = 1 WHERE id = "%d"' % (self.id)
 
@@ -52,14 +68,14 @@ class PlayerAchievementMessage(NewsMessages):
         self.posted = datalist[8]
     def __str__(self):
         return '%s заслужил достижение %s'%(self.character_name,self.title)
-    def get_news_string(self,wdobject):
+    def post_message(self):
         try:
             avatar = wdobject.get_avatar(self.character_name)
         except KeyError:
             avatar = None
         message = '%s заслужил достижение %s'%(self.character_name,self.title)
         answer= {"message":message,"avatar":avatar,'image':avatar}
-        return answer
+        super().post_message(**answer)
     def get_mark_query(self):
         return 'UPDATE player_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 
@@ -77,14 +93,14 @@ class GuildAchievementMessage(NewsMessages):
     def __str__(self):
         print(self.character_name,self.title) 
         return 'Гильдия заслужила достижение %s'%(self.title)
-    def get_news_string(self,wdobject):
+    def post_message(self):
         try:
              avatar = wdobject.get_avatar(self.character_name)
         except KeyError:
              avatar = None 
         message = 'Гильдия заслужила достижение %s'%(self.title)
         answer= {"message":message,"avatar":avatar}
-        return answer
+        super().post_message(**answer)
     def get_mark_query(self):
         return  'UPDATE guild_achievement SET posted = 1 WHERE id = "%d"' % (self.id)
 class GuildInviteMessage(NewsMessages):

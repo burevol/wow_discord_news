@@ -1,6 +1,6 @@
 import traceback
 import requests
-from webhook import DiscordWebhook, DiscordEmbed
+
 from wd_config import Config
 from wd_mysql import MySqlOperations
 
@@ -86,20 +86,7 @@ class WowDiscord():
 
     
 
-    def post_message(self,message, avatar = None, author = None, image = None, url = None):
-        '''Отправляет сообщение в Discord'''
-        webhook = DiscordWebhook(self.cf.discord_webhook)
-        embed = DiscordEmbed()
-        embed.title = message
-        embed.set_image(url = image)
-        embed.set_url(url)
-        embed.color = 242424
-        embed.set_author(name=author, url=None, icon_url=avatar)
-        embed.set_footer(text='Отправлено:')
-        embed.set_timestamp()
-        webhook.add_embed(embed)
-
-        webhook.execute()
+    
 
     def update_guild_members(self):
         self.mysql.reset_guild_flag()
@@ -108,9 +95,12 @@ class WowDiscord():
         self.mysql.check_guild_members()
 
     def read_news(self):
+        
         with MySqlOperations(self.cf) as mysql:
             self.mysql = mysql
-
+            news_types = {'itemLoot':mysql.insert_item_loot,'playerAchievement':
+              mysql.insert_player_achievement,'guildAchievement':
+              mysql.insert_guild_achievement}
             self.items = Items(mysql)
             self.members = Members(mysql)
 
@@ -121,18 +111,24 @@ class WowDiscord():
                 max_timestamp = 0;
             for news in self.get_guild_news():
                 if news['timestamp'] > max_timestamp:
-                    if news['type'] == 'itemLoot':
-                        mysql.insert_item_loot(**news)
-                    elif news['type'] == 'playerAchievement':
-                        mysql.insert_player_achievement(**news)
-                    elif news['type'] == 'guildAchievement':
-                        mysql.insert_guild_achievement(**news)
-                    else:
+                    try:
+                        news_types[news['type']](**news)
+                    except KeyError:
                         pass #Добавить код логирования неопознанных строк
+
+                    #if news['type'] == 'itemLoot':
+                    #    mysql.insert_item_loot(**news)
+                    #elif news['type'] == 'playerAchievement':
+                    #    mysql.insert_player_achievement(**news)
+                    #elif news['type'] == 'guildAchievement':
+                    #    mysql.insert_guild_achievement(**news)
+                    #else:
+                    #    pass #Добавить код логирования неопознанных строк
             for news in mysql.get_unposted_news():
                 try:
                     #print(news.get_news_string(self))
-                    self.post_message(**news.get_news_string(self))
+                    #self.post_message(**news.get_news_string(self))
+                    news.post_message()
                 except:
                     print('Ошибка отправки сообщения в Discord',traceback.format_exc())
                 else:
