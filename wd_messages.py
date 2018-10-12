@@ -46,7 +46,7 @@ class ItemLootMessage(NewsMessages):
         self.gender = datalist[12]
         self.avatar = datalist[15]
         self.item_name = datalist[22]
-
+        self.item_link = datalist[23]
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
     def post_message(self):
@@ -54,7 +54,7 @@ class ItemLootMessage(NewsMessages):
             message = '%s получил %s'%(self.character_name,self.item_name)
         else:
             message = '%s получила %s'%(self.character_name,self.item_name)
-        image = self.get_item_image(self.itemId)
+        image = self.get_item_image(self.item_link)
         url = self.get_item_url(self.itemId)
         avatar_url = self.get_avatar_url(self.avatar)
         answer= {"author":self.character_name,"message":message,"avatar":avatar_url,"image":image,"url":url}
@@ -76,10 +76,14 @@ class PlayerAchievementMessage(NewsMessages):
         self.icon = datalist[7]
         self.posted = datalist[8]
         self.avatar = datalist[17]
+        self.gender = datalist[14]
     def __str__(self):
         return '%s заслужил достижение %s'%(self.character_name,self.title)
     def post_message(self):
-        message = '%s заслужил достижение %s'%(self.character_name,self.title)
+        if not self.gender:
+            message = '%s заслужил достижение %s'%(self.character_name,self.title)
+        else:
+            message = '%s заслужила достижение %s'%(self.character_name,self.title)
         avatar_url = self.get_avatar_url(self.avatar)
         answer= {"message":message,"avatar":avatar_url,'image':avatar_url}
         super().post_message(**answer)
@@ -120,23 +124,23 @@ class GuildInviteMessage(NewsMessages):
         self.avatar = datalist[8]
     def __str__(self):
         if self.isMember == 1:
-            if self.gender == 0:
+            if not self.gender:
                 return "%s присоединился к гильдии"%(self.character_name)
             else:
                 return '%s присоединилась к гильдии'%(self.character_name)
         else:
-            if self.gender == 0:
+            if not self.gender:
                 return "%s покинул гильдию"%(self.character_name)
             else:
                 return '%s покинула гильдию'%(self.character_name)
     def post_message(self):
         if self.isMember == 1:
-            if self.gender == 0:
+            if not self.gender:
                 message = "%s присоединился к гильдии"%(self.character_name)
             else:
                 message =  '%s присоединилась к гильдии'%(self.character_name)
         else:
-            if self.gender == 0:
+            if not self.gender:
                 message =  "%s покинул гильдию"%(self.character_name)
             else:
                 message =  '%s покинула гильдию'%(self.character_name)
