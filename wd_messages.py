@@ -1,7 +1,13 @@
 import traceback
 
 class NewsMessages():
-    pass
+    def get_item_image(self,item_id):
+        '''Возвращает URL изображения предмета'''
+        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.items[item_id]['id'])
+
+    def get_item_url(self,item_id):
+        '''Возвращает URL описания предмета'''
+        return "http://eu.battle.net/wow/ru/item/"+str(item_id) 
 
 class ItemLootMessage(NewsMessages):
     def __init__(self, datalist):
@@ -15,7 +21,7 @@ class ItemLootMessage(NewsMessages):
     def __str__(self):
         return '%s получил %d'%(self.character_name,self.itemId)
     def get_news_string(self,wdobject):
-        try:
+        try:Ы
             gender = wdobject.get_member_info(self.character_name)['gender']
             avatar = wdobject.get_avatar(self.character_name)
         except KeyError:
@@ -26,8 +32,8 @@ class ItemLootMessage(NewsMessages):
             message = '%s получил %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
         else:
             message = '%s получила %s'%(self.character_name,wdobject.get_item_description(self.itemId)['name'])
-        image = wdobject.get_item_image(self.itemId)
-        url = wdobject.get_item_url(self.itemId)
+        image = get_item_image(self.itemId)
+        url = get_item_url(self.itemId)
         answer= {"author":self.character_name,"message":message,"avatar":avatar,"image":image,"url":url}
         return answer
     def get_mark_query(self):

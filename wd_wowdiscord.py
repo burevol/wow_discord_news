@@ -84,13 +84,7 @@ class WowDiscord():
         '''Возвращает словарь с данными персонажа'''
         return self.members[character]
 
-    def get_item_image(self,item_id):
-        '''Возвращает URL изображения предмета'''
-        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.items[item_id]['id'])
-
-    def get_item_url(self,item_id):
-       '''Возвращает URL описания предмета'''
-       return "http://eu.battle.net/wow/ru/item/"+str(item_id)
+    
 
     def post_message(self,message, avatar = None, author = None, image = None, url = None):
         '''Отправляет сообщение в Discord'''
