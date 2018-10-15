@@ -8,3 +8,6 @@ GUILD_REALM = <WoW realm name e.g. galakrond>
 DISCORD_WEBHOOK =  <Discord webhook link>
 WOW_API_KEY = <WoW API key>
 LOCAL = <Locale for WoW API e.g. ru_RU or en_EN>
+CLIENT_ID = <client id>
+CLIENT_SECRET=<client secret>
+AUTH_MODE = <api_key or oauth2>

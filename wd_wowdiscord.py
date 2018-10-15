@@ -22,6 +22,7 @@ def process_news(cf_name):
     wow_data = WowData(cf)
 
     for news in wow_data.get_guild_news():
+        print(news)
         if news['type'] == 'itemLoot':
             if not (session.query(wd_alchemy.CItemLoot).filter_by(character_name=news['character']).filter_by(
                     timestamp=news['timestamp']).first()):
@@ -34,6 +35,7 @@ def process_news(cf_name):
                     session.add(newmember)
                 newloot = wd_alchemy.CItemLoot(**news)
                 session.add(newloot)
+                session.commit()
         elif news['type'] == 'playerAchievement':
             if not (session.query(wd_alchemy.CMemberAchievement).filter_by(character_name=news['character']).filter_by(
                     timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
@@ -43,6 +45,7 @@ def process_news(cf_name):
                     session.add(newmember)
                 new_achievement = wd_alchemy.CMemberAchievement(**news)
                 session.add(new_achievement)
+                session.commit()
         elif news['type'] == 'guildAchievement':
             if not (session.query(wd_alchemy.CGuildAchievement).filter_by(character_name=news['character']).filter_by(
                     timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
@@ -52,6 +55,7 @@ def process_news(cf_name):
                     session.add(newmember)
                 new_achievement = wd_alchemy.CGuildAchievement(**news)
                 session.add(new_achievement)
+                session.commit()
     session.commit()
 
     all_news = []
