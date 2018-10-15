@@ -20,6 +20,10 @@ class MainClass(object):
         Session = sessionmaker(bind=db_engine)
         self.session = Session()
 
+    def check_achievement(self, achieve_class, news_name, news_timestamp, news_achievement):
+        return self.session.query(achieve_class).filter_by(character_name=news_name).filter_by(
+            timestamp=news_timestamp).filter_by(achievement_id=news_achievement).first()
+
     def add_item_loot(self, news):
         if not (self.session.query(wd_alchemy.CItemLoot).filter_by(character_name=news['character']).filter_by(
                 timestamp=news['timestamp']).first()):
@@ -34,9 +38,8 @@ class MainClass(object):
             self.session.add(newloot)
 
     def add_guild_achievement(self, news):
-        if not (
-                self.session.query(wd_alchemy.CMemberAchievement).filter_by(character_name=news['character']).filter_by(
-                    timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
+        if not (self.check_achievement(wd_alchemy.CGuildAchievement, news['character'], news['timestamp'],
+                                       news['achievement']['id'])):
             if not (self.session.query(wd_alchemy.CMember).filter_by(name=news['character']).first()):
                 data_member = self.wow_data.get_character(news['character'])
                 newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
@@ -45,9 +48,8 @@ class MainClass(object):
             self.session.add(new_achievement)
 
     def add_player_achievement(self, news):
-        if not (
-                self.session.query(wd_alchemy.CGuildAchievement).filter_by(character_name=news['character']).filter_by(
-                    timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
+        if not (self.check_achievement(wd_alchemy.CMemberAchievement, news['character'], news['timestamp'],
+                                       news['achievement']['id'])):
             if not (self.session.query(wd_alchemy.CMember).filter_by(name=news['character']).first()):
                 data_member = self.wow_data.get_character(news['character'])
                 newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
@@ -61,9 +63,9 @@ class MainClass(object):
             if news['type'] == 'itemLoot':
                 self.add_item_loot(news)
             elif news['type'] == 'playerAchievement':
-                self.add_guild_achievement(news)
-            elif news['type'] == 'guildAchievement':
                 self.add_player_achievement(news)
+            elif news['type'] == 'guildAchievement':
+                self.add_guild_achievement(news)
         self.session.commit()
 
     def process_item_loot(self):
