@@ -3,4 +3,5 @@ __pycache__
 !wowdiscord.conf.sample
 *.log
 .idea/*
+readme2.md
 
