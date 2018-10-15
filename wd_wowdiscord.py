@@ -20,7 +20,7 @@ class MainClass(object):
         Session = sessionmaker(bind=db_engine)
         self.session = Session()
 
-    def add_item_loot(self,news):
+    def add_item_loot(self, news):
         if not (self.session.query(wd_alchemy.CItemLoot).filter_by(character_name=news['character']).filter_by(
                 timestamp=news['timestamp']).first()):
             if not (self.session.query(wd_alchemy.CItem).filter_by(id=news['itemId']).first()):
@@ -33,7 +33,7 @@ class MainClass(object):
             newloot = wd_alchemy.CItemLoot(**news)
             self.session.add(newloot)
 
-    def add_guild_achievement(self,news):
+    def add_guild_achievement(self, news):
         if not (
                 self.session.query(wd_alchemy.CMemberAchievement).filter_by(character_name=news['character']).filter_by(
                     timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
@@ -43,7 +43,8 @@ class MainClass(object):
                 self.session.add(newmember)
             new_achievement = wd_alchemy.CMemberAchievement(**news)
             self.session.add(new_achievement)
-    def add_player_achievement(self,news):
+
+    def add_player_achievement(self, news):
         if not (
                 self.session.query(wd_alchemy.CGuildAchievement).filter_by(character_name=news['character']).filter_by(
                     timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
@@ -65,10 +66,7 @@ class MainClass(object):
                 self.add_player_achievement(news)
         self.session.commit()
 
-    def process_news(self):
-
-        self.get_data()
-
+    def process_item_loot(self):
         item_news = self.session.query(wd_alchemy.CItemLoot).filter_by(posted=0).all()
         for news in item_news:
             post = ItemLootMessage(self.cf, news)
@@ -79,6 +77,7 @@ class MainClass(object):
             else:
                 news.posted = 1
 
+    def process_player_achievement(self):
         player_news = self.session.query(wd_alchemy.CMemberAchievement).filter_by(posted=0).all()
         for news in player_news:
             post = PlayerAchievementMessage(self.cf, news)
@@ -89,6 +88,7 @@ class MainClass(object):
             else:
                 news.posted = 1
 
+    def process_guild_achievement(self):
         guild_news = self.session.query(wd_alchemy.CGuildAchievement).filter_by(posted=0).all()
         for news in guild_news:
             post = GuildAchievementMessage(self.cf, news)
@@ -98,6 +98,13 @@ class MainClass(object):
                 print('Ошибка отправки сообщения в Discord', traceback.format_exc())
             else:
                 news.posted = 1
+
+    def process_news(self):
+
+        self.get_data()
+        self.process_item_loot()
+        self.process_player_achievement()
+        self.process_guild_achievement()
 
         self.session.commit()
         self.session.close()
