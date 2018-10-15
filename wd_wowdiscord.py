@@ -7,6 +7,7 @@ from wd_generators import WowData
 from wd_messages import ItemLootMessage, GuildAchievementMessage, PlayerAchievementMessage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import MetaData
 
 import wd_alchemy
 
@@ -19,6 +20,8 @@ class MainClass(object):
             'mysql://%s:%s@%s/%s?charset=utf8' % (self.cf.dbuser, self.cf.dbpasswd, self.cf.dbhost, self.cf.db))
         Session = sessionmaker(bind=db_engine)
         self.session = Session()
+        wd_alchemy.Base.metadata.create_all(db_engine)
+        self.session.commit()
 
     def check_achievement(self, achieve_class, news_name, news_timestamp, news_achievement):
         return self.session.query(achieve_class).filter_by(character_name=news_name).filter_by(
@@ -101,7 +104,21 @@ class MainClass(object):
             else:
                 news.posted = 1
 
+    def update_classes(self):
+        for cl in self.wow_data.get_classes():
+            if not (self.session.query(wd_alchemy.CClass).filter_by(class_id = cl['id']).first()):
+                self.session.add(wd_alchemy.CClass(**cl))
+        self.session.commit()
+
+    def update_races(self):
+        for rc in self.wow_data.get_races():
+            if not (self.session.query(wd_alchemy.CRace).filter_by(race_id=rc['id']).first()):
+                self.session.add(wd_alchemy.CRace(**rc))
+        self.session.commit()
+
     def process_news(self):
+        self.update_races()
+        self.update_classes()
 
         self.get_data()
         self.process_item_loot()

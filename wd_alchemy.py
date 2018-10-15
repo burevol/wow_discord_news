@@ -45,9 +45,9 @@ class CItemLoot(Base):
     __tablename__ = 'item_loot'
     id = Column(Integer, primary_key=True)
     type = Column(String(50))
-    character_name = Column(String(50), ForeignKey('guild_members.name'))
+    character_name = Column(String(50), ForeignKey('guild_members.name'),index=True)
     timestamp = Column(BigInteger)
-    itemId = Column(Integer, ForeignKey('items2.id'))
+    itemId = Column(Integer, ForeignKey('items2.id'),index=True)
     context = Column(String(50))
     posted = Column(Integer)
 
@@ -70,10 +70,10 @@ class CMember(Base):
     __tablename__ = 'guild_members'
 
     member_id = Column(Integer, primary_key=True)
-    name = Column(String(100))
+    name = Column(String(100), unique=True, index=True)
     realm = Column(String(50))
-    class_id = Column(Integer, ForeignKey('classes.class_id'))
-    race = Column(Integer, ForeignKey('races.race_id'))
+    class_id = Column(Integer, ForeignKey('classes.class_id'),index=True)
+    race = Column(Integer, ForeignKey('races.race_id'),index=True)
     gender = Column(Integer)
     level = Column(Integer)
     achievementPoints = Column(Integer)
@@ -130,7 +130,7 @@ class CItem(Base):
 class CGuildAchievement(Base):
     __tablename__ = 'guild_achievement'
     id = Column(Integer, primary_key=True)
-    character_name = Column(String(100), ForeignKey('guild_members.name'))
+    character_name = Column(String(100), ForeignKey('guild_members.name'),index=True)
     timestamp = Column(BigInteger)
     context = Column(String(50))
     achievement_id = Column(Integer)
@@ -158,7 +158,7 @@ class CGuildAchievement(Base):
 class CMemberAchievement(Base):
     __tablename__ = 'player_achievement'
     id = Column(Integer, primary_key=True)
-    character_name = Column(String(100), ForeignKey('guild_members.name'))
+    character_name = Column(String(100), ForeignKey('guild_members.name'),index=True)
     timestamp = Column(BigInteger)
     context = Column(String(50))
     achievement_id = Column(Integer)
