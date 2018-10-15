@@ -1,143 +1,93 @@
+# -*- coding: utf-8 -*-
+
 import traceback
-import requests
-from webhook import DiscordWebhook, DiscordEmbed
+
 from wd_config import Config
-from wd_mysql import MySqlOperations
+from wd_generators import WowData
+from wd_messages import ItemLootMessage, GuildAchievementMessage, PlayerAchievementMessage
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from wd_mysqlobjects_items import Items
-from wd_mysqlobjects_members import Members
+import wd_alchemy
 
-class WowDiscord():
-    def __init__(self,configfile = None):
-        if configfile != None:
-            self.cf = Config(configfile)
-        else:
-            self.cf = Config()
-        self.mysql = None
+def process_news(cf_name):
+    cf = Config(cf_name)
 
-    def get_data_json(self,path):
+    db_engine = create_engine('mysql://%s:%s@%s/%s?charset=utf8'%(cf.dbuser,cf.dbpasswd,cf.dbhost,cf.db))
+
+    Session = sessionmaker(bind=db_engine)
+    session = Session()
+
+
+    wow_data = WowData(cf)
+
+    for news in wow_data.get_guild_news():
+        print(news)
+        if news['type'] == 'itemLoot':
+            if not (session.query(wd_alchemy.CItemLoot).filter_by(character_name=news['character']).filter_by(
+                    timestamp=news['timestamp']).first()):
+                if not (session.query(wd_alchemy.CItem).filter_by(id=news['itemId']).first()):
+                    newitem = wd_alchemy.CItem(**wow_data.get_item(news['itemId']))
+                    session.add(newitem)
+                if not (session.query(wd_alchemy.CMember).filter_by(name=news['character']).first()):
+                    data_member = wow_data.get_character(news['character'])
+                    newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
+                    session.add(newmember)
+                newloot = wd_alchemy.CItemLoot(**news)
+                session.add(newloot)
+                session.commit()
+        elif news['type'] == 'playerAchievement':
+            if not (session.query(wd_alchemy.CMemberAchievement).filter_by(character_name=news['character']).filter_by(
+                    timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
+                if not (session.query(wd_alchemy.CMember).filter_by(name=news['character']).first()):
+                    data_member = wow_data.get_character(news['character'])
+                    newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
+                    session.add(newmember)
+                new_achievement = wd_alchemy.CMemberAchievement(**news)
+                session.add(new_achievement)
+                session.commit()
+        elif news['type'] == 'guildAchievement':
+            if not (session.query(wd_alchemy.CGuildAchievement).filter_by(character_name=news['character']).filter_by(
+                    timestamp=news['timestamp']).filter_by(achievement_id=news['achievement']['id']).first()):
+                if not (session.query(wd_alchemy.CMember).filter_by(name=news['character']).first()):
+                    data_member = wow_data.get_character(news['character'])
+                    newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
+                    session.add(newmember)
+                new_achievement = wd_alchemy.CGuildAchievement(**news)
+                session.add(new_achievement)
+                session.commit()
+    session.commit()
+
+    all_news = []
+    item_news = session.query(wd_alchemy.CItemLoot).filter_by(posted = 0).all()
+    for news in item_news:
+        post = ItemLootMessage(cf, news)
         try:
-            request = requests.get(path)
-            request.raise_for_status()
-            request_json = request.json()
-        except requests.exceptions.RequestException as error:
-            print('Ошибка получения данных json') 
-            request_json = []
-        return request_json
-
-    def get_guild_news(self):
-        path = 'https://eu.api.battle.net/wow/guild/%s/%s?fields=news&locale=%s&apikey=%s' % (
-           self.cf.guild_realm, self.cf.guild_name, self.cf.local,self.cf.wow_api_key)
-        request_json = self.get_data_json(path)
-
-        for member in request_json['news']:
-            yield member
-
-    def get_guild_members(self):
-        '''Функция-генератор, возвращающая персонажей гильдии'''
-        path = 'https://eu.api.battle.net/wow/guild/%s/%s?fields=members&locale=%s&apikey=%s'%(self.cf.guild_realm,self.cf.guild_name,self.cf.local,self.cf.wow_api_key)
-        request_json = self.get_data_json(path)
-
-        for member in request_json['members']:
-            yield member
-
-    def get_races(self):
-        '''Функция-генератор, возвращающая расы персонажей'''
-        path = 'https://eu.api.battle.net/wow/data/character/races?locale=%s&apikey=%s'%(self.cf.local,self.cf.wow_api_key)
-        request_json = self.get_data_json(path)
-
-        for race in request_json['races']:
-            yield race
-
-    def get_classes(self):
-        '''Функция - генератор, возвращающая классы персонажей'''
-        path = 'https://eu.api.battle.net/wow/data/character/classes?locale=%s&apikey=%s'%(self.cf.local,self.cf.wow_api_key)
-        request_json = self.get_data_json(path)
-
-        for w_class in request_json['classes']:
-            yield w_class
-
-    def get_item_description(self,item_id):
-        items = Items(self.mysql)
-        try:
-           item = items[item_id]
-        except IndexError:
-            path = 'https://eu.api.battle.net/wow/item/%d?locale=%s&apikey=%s'%(item_id,self.cf.local,self.cf.wow_api_key)
-            request_json = self.get_data_json(path)
-            items[item_id] = request_json
-            return items[item_id]
+            post.post_message()
+        except:
+            print('Ошибка отправки сообщения в Discord', traceback.format_exc())
         else:
-            return item
+            news.posted = 1
 
-    def get_avatar(self,character):
-        '''Возвращает ссылку на аватар персонажа'''
+    player_news = session.query(wd_alchemy.CMemberAchievement).filter_by(posted = 0).all()
+    for news in player_news:
+        post = PlayerAchievementMessage(cf, news)
         try:
-            field = self.members[character]['thumbnail']
-        except KeyError:
-             return None
+            post.post_message()
+        except:
+            print('Ошибка отправки сообщения в Discord', traceback.format_exc())
         else:
-             return  'https://render-eu.worldofwarcraft.com/character/'+field
+            news.posted = 1
 
-    def get_member_info(self, character):
-        '''Возвращает словарь с данными персонажа'''
-        return self.members[character]
+    guild_news = session.query(wd_alchemy.CGuildAchievement).filter_by(posted = 0).all()
+    for news in guild_news:
+        post = GuildAchievementMessage(cf, news)
+        try:
+            post.post_message()
+        except:
+            print('Ошибка отправки сообщения в Discord', traceback.format_exc())
+        else:
+            news.posted = 1
 
-    def get_item_image(self,item_id):
-        '''Возвращает URL изображения предмета'''
-        return "https://render-eu.worldofwarcraft.com/icons/56/%s.jpg"%(self.items[item_id]['id'])
-
-    def get_item_url(self,item_id):
-       '''Возвращает URL описания предмета'''
-       return "http://eu.battle.net/wow/ru/item/"+str(item_id)
-
-    def post_message(self,message, avatar = None, author = None, image = None, url = None):
-        '''Отправляет сообщение в Discord'''
-        webhook = DiscordWebhook(self.cf.discord_webhook)
-        embed = DiscordEmbed()
-        embed.title = message
-        embed.set_image(url = image)
-        embed.set_url(url)
-        embed.color = 242424
-        embed.set_author(name=author, url=None, icon_url=avatar)
-        embed.set_footer(text='Отправлено:')
-        embed.set_timestamp()
-        webhook.add_embed(embed)
-
-        webhook.execute()
-
-    def update_guild_members(self):
-        self.mysql.reset_guild_flag()
-        for member in self.get_guild_members():
-            self.members[member['character']['name']] = member
-        self.mysql.check_guild_members()
-
-    def read_news(self):
-        with MySqlOperations(self.cf) as mysql:
-            self.mysql = mysql
-
-            self.items = Items(mysql)
-            self.members = Members(mysql)
-
-            self.update_guild_members()
-
-            max_timestamp = mysql.get_maximum_timestamp()
-            if max_timestamp == None:
-                max_timestamp = 0;
-            for news in self.get_guild_news():
-                if news['timestamp'] > max_timestamp:
-                    if news['type'] == 'itemLoot':
-                        mysql.insert_item_loot(**news)
-                    elif news['type'] == 'playerAchievement':
-                        mysql.insert_player_achievement(**news)
-                    elif news['type'] == 'guildAchievement':
-                        mysql.insert_guild_achievement(**news)
-                    else:
-                        pass #Добавить код логирования неопознанных строк
-            for news in mysql.get_unposted_news():
-                try:
-                    #print(news.get_news_string(self))
-                    self.post_message(**news.get_news_string(self))
-                except:
-                    print('Ошибка отправки сообщения в Discord',traceback.format_exc())
-                else:
-                    mysql.mark_posted(news)
+    session.commit()
+    session.close()
