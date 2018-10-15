@@ -33,7 +33,8 @@ AUTH_MODE = <api_key or oauth2>
 ```# python3 wow.py [-c path_to_config (default: ./wowdiscord.conf)]```
 
 
+
 ###Authors   
 
-Alexandex Mavimov - [burevol](https://github.com/burevol)
+Alexandex Maximov - [burevol](https://github.com/burevol)
 
