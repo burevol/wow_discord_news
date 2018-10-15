@@ -30,10 +30,11 @@ AUTH_MODE = <api_key or oauth2>
 
 ### Usage  
 
-```# python3 wow.py [-c path_to_config (default: ./wowdiscord.conf)]```
+```# python3 wow.py [-c path_to_config (default: ./wowdiscord.conf)]```  
 
 
-###Authors   
 
-Alexandex Mavimov - [burevol](https://github.com/burevol)
+### Authors   
+
+Alexandex Maximov - [burevol](https://github.com/burevol)
 
