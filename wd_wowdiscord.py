@@ -44,7 +44,7 @@ class MainClass(object):
                 data_member = self.wow_data.get_character(news['character'])
                 newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
                 self.session.add(newmember)
-            new_achievement = wd_alchemy.CMemberAchievement(**news)
+            new_achievement = wd_alchemy.CGuildAchievement(**news)
             self.session.add(new_achievement)
 
     def add_player_achievement(self, news):
@@ -54,7 +54,7 @@ class MainClass(object):
                 data_member = self.wow_data.get_character(news['character'])
                 newmember = wd_alchemy.CMember(**data_member, class_id=data_member['class'])
                 self.session.add(newmember)
-            new_achievement = wd_alchemy.CGuildAchievement(**news)
+            new_achievement = wd_alchemy.CMemberAchievement(**news)
             self.session.add(new_achievement)
 
     def get_data(self):
