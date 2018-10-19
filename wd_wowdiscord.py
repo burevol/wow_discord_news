@@ -7,7 +7,6 @@ from wd_generators import WowData
 from wd_messages import ItemLootMessage, GuildAchievementMessage, PlayerAchievementMessage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import MetaData
 
 import wd_alchemy
 

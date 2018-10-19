@@ -11,3 +11,4 @@ LOCAL = <Locale for WoW API e.g. ru_RU or en_EN>
 CLIENT_ID = <client id>
 CLIENT_SECRET=<client secret>
 AUTH_MODE = <api_key or oauth2>
+DEBUG = <On or Off>

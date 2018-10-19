@@ -50,7 +50,7 @@ class WowData():
         path = '%s/wow/guild/%s/%s?fields=news&locale=%s&%s=%s' % (
             self.host, self.cf.guild_realm, self.cf.guild_name, self.cf.local, self.auth_string, self.cf.wow_api_key)
         request_json = self.get_data_json(path)
-        print(path,request_json)
+
         for member in request_json['news']:
             yield member
 

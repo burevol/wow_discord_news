@@ -25,6 +25,7 @@ LOCAL = <locale for WoW API quieries>
 CLIENT_ID = <client id (only for oauth2)>
 CLIENT_SECRET= <client secret (only for AUTH_MODE oauth2)>
 AUTH_MODE = <api_key or oauth2>
+DEBUG = <On of Off>
 ```
 
 
